@@ -1,0 +1,3 @@
+-P ubuntu-latest=rust:1.80-slim
+-P macos-latest=rust:1.80-slim
+-P windows-latest=rust:1.80-slim

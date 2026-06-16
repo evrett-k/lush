@@ -1,0 +1,21 @@
+# Lush Shell Feature Test
+printf "\\033[1;36mPipes\\033[0m\n"
+echo "apple\nbanana\ncherry" | grep "banana"
+
+printf "\\033[1;36mRedirections\\033[0m\n"
+echo "Redirection works" > lush_test_output.txt
+cat lush_test_output.txt
+rm lush_test_output.txt
+
+printf "\\033[1;36mEnvironment Variables\\033[0m\n"
+export LUSH_TEST_VAR="LushEnvOK"
+echo $LUSH_TEST_VAR
+
+printf "\\033[1;36mBuiltins and System Commands\\033[0m\n"
+mkdir lush_test_dir
+cd lush_test_dir
+echo "In nested dir"
+cd ..
+exec("rm", "-rf", "lush_test_dir")
+
+echo "Lush tests finished"

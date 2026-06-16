@@ -1,0 +1,14 @@
+# cargo
+/target
+
+# lsp
+lsp/target
+package-lock.json
+*.vsix
+
+# agents
+/.junie
+
+# build/dist
+/dist
+.DS_Store

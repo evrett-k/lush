@@ -1,0 +1,37 @@
+{
+  "name": "lush-lsp-client",
+  "displayName": "Lush Language Support",
+  "description": "LSP Support for Lush scripts",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "lush",
+        "aliases": ["Lush", "lush"],
+        "extensions": [".lush"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "lush",
+        "scopeName": "source.lush",
+        "path": "./syntaxes/lush.tmLanguage.json"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onLanguage:lua",
+    "onLanguage:lush"
+  ],
+  "main": "./src/extension.js",
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0"
+  }
+}
