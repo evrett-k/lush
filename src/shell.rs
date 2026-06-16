@@ -1,7 +1,4 @@
-/// Native POSIX shell execution via embedded yash-rs.
-
-/// Execute a shell string natively through yash.
-/// Returns the exit status code.
+#[cfg(unix)]
 pub async fn exec_str(input: &str) -> i32 {
     let input = input.to_string();
     tokio::task::spawn_blocking(move || {
@@ -16,14 +13,9 @@ pub async fn exec_str(input: &str) -> i32 {
                 eprintln!("lush: failed to enable SIGCHLD disposition: {}", e);
             }
 
-            // Register all POSIX builtins (echo, cd, pwd, etc.)
             env.builtins.extend(yash_builtin::iter());
-
-            // Inherit PATH from process environment (already augmented by init_engine)
-            // and export it into yash's variable set
             env.init_variables();
 
-            // Also explicitly set PATH in yash's env so external utils like echo, test, etc. are found
             if let Ok(path_val) = std::env::var("PATH") {
                 use yash_env::variable::{Scope, Value};
                 env.variables
@@ -41,6 +33,12 @@ pub async fn exec_str(input: &str) -> i32 {
 
         runner.run_real(task)
     }).await.unwrap_or(1)
+}
+
+#[cfg(not(unix))]
+pub async fn exec_str(input: &str) -> i32 {
+    eprintln!("lush: yash shell is not supported on this platform: {}", input);
+    1
 }
 
 /// Execute a shell script file natively through yash.
