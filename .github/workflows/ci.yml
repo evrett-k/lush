@@ -33,19 +33,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y distrobox podman
           # Arch
-          distrobox-create --pull --name arch-builder --image archlinux:latest
+          distrobox-create --root --pull --name arch-builder --image archlinux:latest
           distrobox-enter arch-builder -- sudo pacman -Syu --noconfirm base-devel
           # Void
-          distrobox-create --pull --name void-builder --image ghcr.io/void-linux/void-linux:latest
+          distrobox-create --root --pull --name void-builder --image ghcr.io/void-linux/void-linux:latest
           distrobox-enter void-builder -- xbps-install -Sy xbps-tools base-devel
           # Fedora (RHEL)
-          distrobox-create --pull --name fedora-builder --image fedora:latest
+          distrobox-create --root --pull --name fedora-builder --image fedora:latest
           distrobox-enter fedora-builder -- sudo dnf install -y rpm-build
           # openSUSE
-          distrobox-create --pull --name suse-builder --image opensuse/leap:latest
+          distrobox-create --root --pull --name suse-builder --image opensuse/leap:latest
           distrobox-enter suse-builder -- sudo zypper install -y rpm-build
           # Alpine
-          distrobox-create --pull --name alpine-builder --image alpine:latest
+          distrobox-create --root --pull --name alpine-builder --image alpine:latest
           distrobox-enter alpine-builder -- apk add abuild
       - name: Build Artifacts
         shell: bash
