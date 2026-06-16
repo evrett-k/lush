@@ -16,6 +16,13 @@ use std::process::Command;
 #[cfg(unix)]
 use nix::sys::signal::{self, Signal};
 
+#[cfg(unix)]
+use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(unix)]
+use std::sync::Arc;
+#[cfg(unix)]
+use tokio::signal::unix::{signal, SignalKind};
+
 fn path_binaries() -> HashSet<String> {
     let mut bins = HashSet::new();
     if let Some(path_var) = env::var_os("PATH") {
@@ -125,7 +132,6 @@ impl Helper for ShellHelper {}
 fn build_prompt(last_exit_code: i32) -> String {
     let cwd = env::current_dir()
         .map(|p| {
-            // Shorten home dir to ~
             if let Some(home) = env::var_os("HOME") {
                 let home = std::path::PathBuf::from(home);
                 if let Ok(rel) = p.strip_prefix(&home) {
@@ -136,7 +142,6 @@ fn build_prompt(last_exit_code: i32) -> String {
         })
         .unwrap_or_else(|_| "/".to_string());
 
-    // Git branch
     let branch = Command::new("git")
         .args(["rev-parse", "--abbrev-ref", "HEAD"])
         .output()
@@ -145,7 +150,6 @@ fn build_prompt(last_exit_code: i32) -> String {
         .and_then(|o| String::from_utf8(o.stdout).ok())
         .map(|s| format!(" \x1b[90m{}\x1b[0m", s.trim()));
 
-    // Simple bash-like prompt char: $ (red if last command failed)
     let prompt_char = if last_exit_code == 0 {
         "\x1b[1m$\x1b[0m"
     } else {
@@ -200,27 +204,24 @@ fn get_starship_prompt(last_exit_code: i32) -> Option<(String, String)> {
     }
 }
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use tokio::signal::unix::{signal, SignalKind};
-
 pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
     if env::var("LANG").is_err() { env::set_var("LANG", "en_US.UTF-8"); }
     if env::var("LC_ALL").is_err() { env::set_var("LC_ALL", "en_US.UTF-8"); }
 
-    // Signal monitoring
-    let interrupt = Arc::new(AtomicBool::new(false));
-    let i_clone = Arc::clone(&interrupt);
-    tokio::spawn(async move {
-        let mut sigint = signal(SignalKind::interrupt()).expect("failed to bind sigint");
-        loop {
-            sigint.recv().await;
-            i_clone.store(true, Ordering::SeqCst);
-        }
-    });
+    #[cfg(unix)]
+    let interrupt = {
+        let interrupt = Arc::new(AtomicBool::new(false));
+        let i_clone = Arc::clone(&interrupt);
+        tokio::spawn(async move {
+            let mut sigint = signal(SignalKind::interrupt()).expect("failed to bind sigint");
+            loop {
+                sigint.recv().await;
+                i_clone.store(true, Ordering::SeqCst);
+            }
+        });
+        Some(interrupt)
+    };
     
-    // ... (rest of the function)
-
     let config = Config::builder().completion_type(CompletionType::Circular).build();
     let mut rl = Editor::with_config(config).map_err(|e| {
         mlua::Error::RuntimeError(format!("Failed to initialize prompt: {}", e))
@@ -233,35 +234,34 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
     let mut last_exit_code = 0;
 
     loop {
-        if interrupt.load(Ordering::SeqCst) {
-            interrupt.store(false, Ordering::SeqCst);
-            
-            // Try to trigger a registered SIGINT trap
-            let mut trapped = false;
-            let globals = lua.globals();
-            if let Ok(traps) = globals.get::<mlua::Table>("LUSH_TRAPS") {
-                if let Ok(callback) = traps.get::<mlua::Function>("SIGINT") {
-                    if let Err(e) = callback.call::<()>(()) {
-                        eprintln!("lush: error in SIGINT trap: {}", e);
+        #[cfg(unix)]
+        if let Some(ref interrupt) = interrupt {
+            if interrupt.load(Ordering::SeqCst) {
+                interrupt.store(false, Ordering::SeqCst);
+                
+                let mut trapped = false;
+                let globals = lua.globals();
+                if let Ok(traps) = globals.get::<mlua::Table>("LUSH_TRAPS") {
+                    if let Ok(callback) = traps.get::<mlua::Function>("SIGINT") {
+                        if let Err(e) = callback.call::<()>(()) {
+                            eprintln!("lush: error in SIGINT trap: {}", e);
+                        }
+                        trapped = true;
                     }
-                    trapped = true;
                 }
-            }
 
-            if !trapped {
-                println!("\n^C detected");
+                if !trapped {
+                    println!("\n^C detected");
+                }
+                continue;
             }
-            continue;
         }
 
-        // Restore default signal handling at the prompt so Ctrl+C is
-        // handled by rustyline (clears the line) and Ctrl+Z suspends lush
         #[cfg(unix)]
         unsafe {
             let _ = signal::signal(Signal::SIGINT, signal::SigHandler::SigDfl);
             let _ = signal::signal(Signal::SIGTSTP, signal::SigHandler::SigDfl);
         }
-
 
         let use_starship = {
             let val = lua.globals().get::<mlua::Value>("use_starship").unwrap_or(mlua::Value::Nil);
@@ -312,13 +312,11 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
                     Err(_) => { last_exit_code = crate::shell::exec_str(trimmed).await; }
                 }
             }
-            // Ctrl+C at prompt — clear line, continue
             Err(ReadlineError::Interrupted) => {
                 println!();
                 last_exit_code = 130;
                 continue;
             }
-            // Ctrl+D — exit
             Err(ReadlineError::Eof) => { break; }
             Err(err) => { eprintln!("Terminal Error: {:?}", err); break; }
         }
