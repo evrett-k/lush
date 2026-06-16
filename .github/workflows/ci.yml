@@ -16,7 +16,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            targets: "deb nix linux-static-amd64 linux-static-x86 linux-static-arm64 freebsd openbsd"
+            targets: "deb nix linux-static-amd64 linux-static-x86 linux-static-arm64 freebsd openbsd arch void rhel suse alpine"
           - os: macos-latest
             targets: "macos-pkg macos-dmg brew procursus-arm64 procursus-amd64"
           - os: windows-latest
@@ -32,23 +32,37 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y distrobox podman
-          # Setup Arch Linux container for Arch packaging
+          # Arch
           distrobox-create --name arch-builder --image archlinux:latest
           distrobox-enter arch-builder -- sudo pacman -Syu --noconfirm base-devel
-          # Setup Void Linux container for Void packaging
+          # Void
           distrobox-create --name void-builder --image ghcr.io/void-linux/void-linux:latest
           distrobox-enter void-builder -- xbps-install -Sy xbps-tools base-devel
+          # Fedora (RHEL)
+          distrobox-create --name fedora-builder --image fedora:latest
+          distrobox-enter fedora-builder -- sudo dnf install -y rpm-build
+          # openSUSE
+          distrobox-create --name suse-builder --image opensuse/leap:latest
+          distrobox-enter suse-builder -- sudo zypper install -y rpm-build
+          # Alpine
+          distrobox-create --name alpine-builder --image alpine:latest
+          distrobox-enter alpine-builder -- apk add abuild
       - name: Build Artifacts
         shell: bash
         run: |
           chmod +x build.sh
           for target in ${{ matrix.targets }}; do
             if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-              # Dispatch based on target
               if [[ "$target" == "arch" ]]; then
                 distrobox-enter arch-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh arch"
               elif [[ "$target" == "void" ]]; then
                 distrobox-enter void-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh void"
+              elif [[ "$target" == "rhel" ]]; then
+                distrobox-enter fedora-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh rhel"
+              elif [[ "$target" == "suse" ]]; then
+                distrobox-enter suse-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh suse"
+              elif [[ "$target" == "alpine" ]]; then
+                distrobox-enter alpine-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh alpine"
               else
                 ./build.sh "$target" || echo "Warning: $target failed"
               fi
