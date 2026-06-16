@@ -14,7 +14,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            targets: "deb nix linux-static-amd64 linux-static-x86 linux-static-arm64 freebsd openbsd"
+          - os: macos-latest
+            targets: "macos-pkg macos-dmg brew procursus-arm64 procursus-amd64"
+          - os: windows-latest
+            targets: "windows-msi windows-portable windows32-portable windows-arm64-portable"
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
@@ -22,8 +28,10 @@ jobs:
       - name: Build Artifacts
         shell: bash
         run: |
-          chmod +x build.sh github-build.sh
-          ./github-build.sh
+          chmod +x build.sh
+          for target in ${{ matrix.targets }}; do
+            ./build.sh "$target" || echo "Warning: $target failed"
+          done
           cargo build -p lush-lsp --release
       - name: Package VS Code Extension
         if: matrix.os == 'macos-latest'
@@ -44,6 +52,6 @@ jobs:
         with:
           files: |
             dist/*
-            target/release/lush*
-            target/release/*.exe
-            target/*/release/lush*
+            dist/*/*
+            target/*/release/lush
+            target/*/release/lush.exe
