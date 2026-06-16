@@ -29,8 +29,9 @@ jobs:
           targets: x86_64-unknown-linux-musl,x86_64-pc-windows-msvc,aarch64-apple-darwin,x86_64-apple-darwin
       - name: Install Tools
         shell: bash
+        continue-on-error: true
         run: |
-          cargo install cross
+          cargo install cross || echo "Cross already installed"
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh
           fi
