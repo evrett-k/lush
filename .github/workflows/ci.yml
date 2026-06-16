@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Release Artifacts
@@ -33,4 +36,11 @@ jobs:
           vsce package
           mkdir -p ../../dist
           mv *.vsix ../../dist/
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.vsix
+            target/release/lush*
+            target/release/*.exe
 
