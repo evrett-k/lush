@@ -16,17 +16,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            targets: "package"
           - os: windows-latest
-            targets: "windows-portable"
           - os: macos-latest
-            targets: "macos-pkg macos-dmg brew"
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-unknown-linux-musl,x86_64-pc-windows-msvc,aarch64-apple-darwin,x86_64-apple-darwin
       - name: Install Tools
         shell: bash
         continue-on-error: true
@@ -39,8 +35,6 @@ jobs:
         shell: bash
         run: |
           chmod +x build.sh
-          for target in ${{ matrix.targets }}; do
-            ./build.sh "$target" || echo "Warning: $target failed"
           done
           cargo build -p lush-lsp --release
       - name: Package VS Code Extension
@@ -62,15 +56,10 @@ jobs:
         with:
           files: |
             dist/*
-            target/release/lush
-            target/release/lush.exe
-            target/*/release/lush
-            target/*/release/lush.exe
-            target/release/lush-lsp
-            target/release/lush-lsp.exe
-            target/*/release/lush-lsp
-            target/*/release/lush-lsp.exe
+            dist/*.pkg
+            dist/*.dmg
+            dist/*.rb
+            dist/*.deb
         exclude:
           - "**/*.pdb"
           - "**/*.d"
-            target/release/lush-lsp*
