@@ -10,26 +10,20 @@ permissions:
 
 jobs:
   build:
-    name: Build Artifacts
+    name: Build Release Artifacts
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            targets: "deb"
-          - os: macos-latest
-            targets: "macos-pkg macos-dmg procursus-arm64 procursus-amd64 brew"
-          - os: windows-latest
-            targets: "windows-portable windows32-portable windows-arm64-portable"
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Build and Package
+      - name: Build Artifacts
         shell: bash
         run: |
-          chmod +x build.sh
-          ./build.sh ${{ matrix.targets }}
+          chmod +x build.sh github-build.sh
+          ./github-build.sh
           cargo build -p lush-lsp --release
       - name: Package VS Code Extension
         if: matrix.os == 'macos-latest'
