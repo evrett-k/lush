@@ -62,6 +62,15 @@ jobs:
         with:
           files: |
             dist/*
+            target/release/lush
+            target/release/lush.exe
             target/*/release/lush
             target/*/release/lush.exe
+            target/release/lush-lsp
+            target/release/lush-lsp.exe
+            target/*/release/lush-lsp
+            target/*/release/lush-lsp.exe
+        exclude:
+          - "**/*.pdb"
+          - "**/*.d"
             target/release/lush-lsp*
