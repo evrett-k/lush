@@ -23,7 +23,8 @@ jobs:
         shell: bash
         run: |
           chmod +x build.sh
-          ./build.sh --release
+          ./build.sh
+          cargo build -p lush-lsp --release
       - name: Package VS Code Extension
         uses: actions/setup-node@v4
         with:
@@ -44,4 +45,3 @@ jobs:
             target/release/lush*
             target/release/*.exe
             target/*/release/lush*
-
