@@ -27,22 +27,31 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-musl,x86_64-pc-windows-msvc,aarch64-unknown-linux-musl,i686-unknown-linux-musl,i686-pc-windows-msvc,aarch64-pc-windows-msvc
-      - name: Install Distrobox (Ubuntu Only)
+      - name: Install Distrobox & Tools (Ubuntu Only)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y distrobox podman
-          distrobox-create --name lush-builder --image docker.io/library/debian:bookworm
-          distrobox-enter lush-builder -- sudo apt-get update
-          distrobox-enter lush-builder -- sudo apt-get install -y rpm rpm-build dpkg-dev devscripts build-essential
+          # Setup Arch Linux container for Arch packaging
+          distrobox-create --name arch-builder --image archlinux:latest
+          distrobox-enter arch-builder -- sudo pacman -Syu --noconfirm base-devel
+          # Setup Void Linux container for Void packaging
+          distrobox-create --name void-builder --image ghcr.io/void-linux/void-linux:latest
+          distrobox-enter void-builder -- xbps-install -Sy xbps-tools base-devel
       - name: Build Artifacts
         shell: bash
         run: |
           chmod +x build.sh
           for target in ${{ matrix.targets }}; do
             if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-              # Inject tools and build
-              distrobox-enter lush-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh $target" || echo "Warning: $target failed"
+              # Dispatch based on target
+              if [[ "$target" == "arch" ]]; then
+                distrobox-enter arch-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh arch"
+              elif [[ "$target" == "void" ]]; then
+                distrobox-enter void-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh void"
+              else
+                ./build.sh "$target" || echo "Warning: $target failed"
+              fi
             else
               ./build.sh "$target" || echo "Warning: $target failed"
             fi
