@@ -16,59 +16,21 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            targets: "deb nix linux-static-amd64 linux-static-x86 linux-static-arm64 freebsd openbsd arch void rhel suse alpine"
+            targets: "linux-static-amd64 linux-static-x86 linux-static-arm64 appimage"
           - os: macos-latest
             targets: "macos-pkg macos-dmg brew procursus-arm64 procursus-amd64"
           - os: windows-latest
-            targets: "windows-msi windows-portable windows32-portable windows-arm64-portable"
+            targets: "windows-portable windows32-portable windows-arm64-portable"
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-unknown-linux-musl,x86_64-pc-windows-msvc,aarch64-unknown-linux-musl,i686-unknown-linux-musl,i686-pc-windows-msvc,aarch64-pc-windows-msvc
-      - name: Install Distrobox & Tools (Ubuntu Only)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y distrobox podman
-          # Arch
-          distrobox-create --root --pull --name arch-builder --image archlinux:latest
-          distrobox-enter arch-builder -- sudo pacman -Syu --noconfirm base-devel
-          # Void
-          distrobox-create --root --pull --name void-builder --image ghcr.io/void-linux/void-linux:latest
-          distrobox-enter void-builder -- xbps-install -Sy xbps-tools base-devel
-          # Fedora (RHEL)
-          distrobox-create --root --pull --name fedora-builder --image fedora:latest
-          distrobox-enter fedora-builder -- sudo dnf install -y rpm-build
-          # openSUSE
-          distrobox-create --root --pull --name suse-builder --image opensuse/leap:latest
-          distrobox-enter suse-builder -- sudo zypper install -y rpm-build
-          # Alpine
-          distrobox-create --root --pull --name alpine-builder --image alpine:latest
-          distrobox-enter alpine-builder -- apk add abuild
       - name: Build Artifacts
         shell: bash
         run: |
           chmod +x build.sh
           for target in ${{ matrix.targets }}; do
-            if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-              if [[ "$target" == "arch" ]]; then
-                distrobox-enter arch-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh arch"
-              elif [[ "$target" == "void" ]]; then
-                distrobox-enter void-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh void"
-              elif [[ "$target" == "rhel" ]]; then
-                distrobox-enter fedora-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh rhel"
-              elif [[ "$target" == "suse" ]]; then
-                distrobox-enter suse-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh suse"
-              elif [[ "$target" == "alpine" ]]; then
-                distrobox-enter alpine-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh alpine"
-              else
-                ./build.sh "$target" || echo "Warning: $target failed"
-              fi
-            else
-              ./build.sh "$target" || echo "Warning: $target failed"
-            fi
+            ./build.sh "$target" || echo "Warning: $target failed"
           done
           cargo build -p lush-lsp --release
       - name: Package VS Code Extension
@@ -90,6 +52,5 @@ jobs:
         with:
           files: |
             dist/*
-            dist/*/*
             target/*/release/lush
             target/*/release/lush.exe
