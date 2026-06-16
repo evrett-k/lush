@@ -10,26 +10,34 @@ permissions:
 
 jobs:
   build:
-    name: Build Release Artifacts
+    name: Build Artifacts
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            targets: "deb"
+          - os: macos-latest
+            targets: "macos-pkg macos-dmg procursus-arm64 procursus-amd64 brew"
+          - os: windows-latest
+            targets: "windows-portable windows32-portable windows-arm64-portable"
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Build Artifacts
+      - name: Build and Package
         shell: bash
         run: |
           chmod +x build.sh
-          ./build.sh
+          ./build.sh ${{ matrix.targets }}
           cargo build -p lush-lsp --release
       - name: Package VS Code Extension
+        if: matrix.os == 'macos-latest'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install and Package
+      - name: Install and Package VSIX
+        if: matrix.os == 'macos-latest'
         shell: bash
         working-directory: editors/vscode
         run: |
