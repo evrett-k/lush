@@ -33,13 +33,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y distrobox podman
           distrobox-create --name lush-builder --image docker.io/library/debian:bookworm
+          distrobox-enter lush-builder -- sudo apt-get update
+          distrobox-enter lush-builder -- sudo apt-get install -y rpm rpm-build dpkg-dev devscripts build-essential
       - name: Build Artifacts
         shell: bash
         run: |
           chmod +x build.sh
           for target in ${{ matrix.targets }}; do
             if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-              distrobox-enter lush-builder -- ./build.sh "$target" || echo "Warning: $target failed"
+              # Inject tools and build
+              distrobox-enter lush-builder -- bash -c "cd /Volumes/ext-storage/apps/lush && ./build.sh $target" || echo "Warning: $target failed"
             else
               ./build.sh "$target" || echo "Warning: $target failed"
             fi
