@@ -1,0 +1,14 @@
+name: lush
+version: 0.1.0
+release: 1
+section: shells
+priority: optional
+architecture: amd64
+maintainer: evrett-k <evrett.k@proton.me>
+description: A Lua-powered shell
+homepage: https://github.com/evrett-k/lush
+license: GPLv3
+contents:
+  - src: target/x86_64-unknown-linux-musl/release/lush
+    dst: /usr/bin/lush
+    type: bin

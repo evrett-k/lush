@@ -16,16 +16,24 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            targets: "linux-static-amd64 linux-static-x86 linux-static-arm64 appimage"
-          - os: macos-latest
-            targets: "macos-pkg macos-dmg brew procursus-arm64 procursus-amd64"
+            targets: "package"
           - os: windows-latest
-            targets: "windows-portable windows32-portable windows-arm64-portable"
+            targets: "windows-portable"
+          - os: macos-latest
+            targets: "macos-pkg macos-dmg brew"
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Build Artifacts
+        with:
+          targets: x86_64-unknown-linux-musl,x86_64-pc-windows-msvc,aarch64-apple-darwin,x86_64-apple-darwin
+      - name: Install Tools
+        run: |
+          cargo install cross
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sh
+          fi
+      - name: Build and Package
         shell: bash
         run: |
           chmod +x build.sh
@@ -54,3 +62,4 @@ jobs:
             dist/*
             target/*/release/lush
             target/*/release/lush.exe
+            target/release/lush-lsp*
