@@ -13,7 +13,7 @@ formats:
   apk:
     file: "dist/lush-{{ .Version }}-{{ .Arch }}.apk"
 contents:
-- src: dist/bin/linux/{{ .Arch }}/lush
-  dst: /usr/bin/lush
-- src: dist/bin/linux/{{ .Arch }}/lush-lsp
-  dst: /usr/bin/lush-lsp
+  - src: dist/bin/linux/{{ .Arch }}/lush
+    dst: /usr/bin/lush
+  - src: dist/bin/linux/{{ .Arch }}/lush-lsp
+    dst: /usr/bin/lush-lsp
