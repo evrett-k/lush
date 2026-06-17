@@ -4,11 +4,12 @@ RUN apk add --no-cache mingw-w64-gcc gcc musl-dev
 WORKDIR /app
 COPY . .
 
-# Build for Windows (using x86_64-pc-windows-gnu for easier cross-compilation on alpine)
+# Build for Windows
 RUN rustup target add x86_64-pc-windows-gnu
-RUN cargo build --release --target x86_64-pc-windows-gnu
+RUN cargo build --release --target x86_64-pc-windows-gnu --workspace
 
 FROM alpine:latest
 COPY --from=builder /app/target/x86_64-pc-windows-gnu/release/lush.exe /app/lush.exe
+COPY --from=builder /app/target/x86_64-pc-windows-gnu/release/lush-lsp.exe /app/lush-lsp.exe
 ENTRYPOINT ["/app/lush.exe"]
 
