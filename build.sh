@@ -5,10 +5,6 @@ NAME="lush"
 VERSION="0.1.0"
 DIST="dist"
 
-# Targets
-T_LINUX_X64="x86_64-unknown-linux-musl"
-T_LINUX_ARM64="aarch64-unknown-linux-musl"
-
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
@@ -24,24 +20,26 @@ need() { command -v "$1" &>/dev/null || die "'$1' not found. Please install $1";
 
 mkdir -p "$DIST"
 
-# Build Linux with standard cargo (assuming nix toolchain provides targets)
 package_linux() {
     need nfpm
-    step "building and packaging linux (deb, rpm, apk)"
-    for t in "$T_LINUX_X64" "$T_LINUX_ARM64"; do
-        step "Compiling for $t..."
-        cargo build --release --target "$t"
+    need docker
+    need cross
+    step "building and packaging linux (cross + docker)"
+    for t in "x86_64-unknown-linux-musl" "aarch64-unknown-linux-musl"; do
+        step "Building $t via cross..."
+        cross build --release --target "$t" || die "Build failed for $t"
+        
         mkdir -p bin && cp "target/$t/release/$NAME" "bin/lush"
         
-        # Package using nfpm
-        nfpm pkg -t deb -p "$DIST/lush_${VERSION}_${t}.deb"
-        nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.${t}.rpm"
-        nfpm pkg -t apk -p "$DIST/lush-${VERSION}-${t}.apk"
+        step "Packaging $t..."
+        export ARCH=$(echo "$t" | cut -d'-' -f1)
+        nfpm pkg -t deb -p "$DIST/lush_${VERSION}_${ARCH}.deb"
+        nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.${ARCH}.rpm"
+        nfpm pkg -t apk -p "$DIST/lush-${VERSION}-${ARCH}.apk"
     done
     ok "packaged linux formats"
 }
 
-# Build macOS natively
 build_macos() {
     step "building macos procursus targets (native)"
     cargo build --release
