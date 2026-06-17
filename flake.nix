@@ -70,6 +70,8 @@
             act
             nodejs
             nfpm
+            docker
+            cross
           ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [
             Security
             SystemConfiguration
@@ -80,9 +82,20 @@
           RUST_BACKTRACE = 1;
           RUST_LOG = "debug";
 
+          # Define a custom environment variable or function for Procursus setup
+          PROCURSUS_BOOTSTRAP = "${./procursus-bootstrap.sh}";
+
           shellHook = ''
             export CARGO_HOME="$HOME/.cargo"
             export PATH="$CARGO_HOME/bin:$PATH"
+            
+            setup_procursus() {
+              echo "Setting up Procursus environment..."
+              sudo bash "$PROCURSUS_BOOTSTRAP"
+            }
+            
+            export -f setup_procursus
+            echo "Procursus environment tool: run 'setup_procursus'"
           '';
         };
       }
