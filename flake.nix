@@ -36,9 +36,6 @@
             lua5_4
             openssl
             libiconv
-          ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            Security
-            SystemConfiguration
           ];
 
           checkFlags = [ "--skip=repl" ];
@@ -71,9 +68,6 @@
             nodejs
             nfpm
             docker
-          ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            Security
-            SystemConfiguration
           ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
             pkgs.glibc
           ];
