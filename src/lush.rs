@@ -341,23 +341,38 @@ fn inject_builtins(lua: &Lua) -> Result<()> {
     globals.set("exec", exec_fn)?;
 
     let common_tools = [
-        "git", "cargo", "brew", "npm", "yarn", "pnpm",
-        "python3", "python", "ruby", "node", "deno",
-        "make", "cmake", "docker", "kubectl", "ssh",
-        "curl", "wget", "tar", "zip", "unzip",
-        "rustc", "gcc", "clang",
-        "uname", "grep", "find", "sed", "awk", "sort", "head", "tail",
-        "wc", "cut", "tr", "xargs", "which", "basename", "dirname",
-        "chmod", "chown", "ln", "du", "df", "ps", "kill", "top",
-        "open", "pbcopy", "pbpaste", "sw_vers",
-        "systemctl", "journalctl", "apt", "apt-get", "yum", "dnf", "pacman",
-        "ping", "traceroute", "netstat", "ifconfig", "ip",
-        "vim", "nvim", "nano", "less", "more",
-        "tmux", "screen",
-        "go", "java", "javac", "mvn", "gradle",
-        "terraform", "ansible", "helm",
-        "jq", "yq", "fzf", "rg", "bat", "eza", "fd",
-        "fish", "pwsh",
+        // Shells/Scripting
+        "fish", "pwsh", "zsh", "bash", "sh", "dash",
+        // Version Control
+        "git", "svn", "cvs",
+        // Compilers/Build
+        "cargo", "rustc", "gcc", "clang", "make", "cmake", "ninja", "gmake",
+        // Languages
+        "python3", "python", "ruby", "node", "deno", "go", "java", "javac", "perl", "node",
+        // Package Managers/Dev
+        "brew", "npm", "yarn", "pnpm", "mvn", "gradle", "go", "gem", "pip",
+        // Cloud/Container
+        "docker", "kubectl", "helm", "terraform", "ansible", "aws", "gcloud", "az",
+        // Editors/Pager/Viewer
+        "vim", "nvim", "nano", "less", "more", "bat", "emacs",
+        // Text/File Processing
+        "grep", "find", "sed", "awk", "sort", "head", "tail", "wc", "cut", "tr", "xargs",
+        "basename", "dirname", "cat", "tee", "uniq", "fmt", "fold", "join", "paste", "split",
+        "base64", "hexdump", "od", "md5sum", "sha1sum", "sha256sum",
+        // Filesystem/System
+        "ls", "cd", "pwd", "mkdir", "touch", "rm", "mv", "cp", "ln", "du", "df",
+        "chmod", "chown", "chgrp", "stat", "find", "locate", "updatedb",
+        "mount", "umount", "chroot", "fdisk", "lsblk",
+        // Processes/Monitoring
+        "ps", "kill", "top", "htop", "glances", "pstree", "lsof", "free", "uptime", "w", "who", "last",
+        // Networking
+        "ssh", "ssh-keygen", "ssh-add", "scp", "rsync", "curl", "wget", "ping", "traceroute",
+        "netstat", "ifconfig", "ip", "ss", "nmap", "dig", "nslookup", "host",
+        // Terminal/Session
+        "tmux", "screen", "clear", "watch", "history", "alias", "env", "export",
+        // Misc
+        "time", "ts", "nice", "renice", "nohup", "sleep", "yes", "true", "false",
+        "jq", "yq", "fzf", "rg", "eza", "fd", "bat",
     ];
     for tool in common_tools {
         let tool_name = tool.to_string();
