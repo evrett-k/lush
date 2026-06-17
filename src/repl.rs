@@ -264,7 +264,7 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
                 }
 
                 if !trapped {
-                    println!("\n^C detected");
+                    // No output on interrupt
                 }
                 continue;
             }
