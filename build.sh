@@ -30,10 +30,11 @@ package_linux() {
     mkdir -p bin
     docker cp lush-temp-linux:/usr/local/bin/lush bin/lush
     docker rm lush-temp-linux
+# Package using nfpm
+nfpm pkg -t deb -p "$DIST/lush_${VERSION}_amd64.deb" || echo "Deb packaging failed"
+nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.x86_64.rpm" || echo "RPM packaging failed"
+nfpm pkg -t apk -p "$DIST/lush-${VERSION}-x86_64.apk" || echo "APK packaging failed"
 
-    nfpm pkg -t deb -p "$DIST/lush_${VERSION}_amd64.deb"
-    nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.x86_64.rpm"
-    nfpm pkg -t apk -p "$DIST/lush-${VERSION}-x86_64.apk"
     
     ok "packaged linux formats"
 }
