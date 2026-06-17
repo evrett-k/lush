@@ -12,3 +12,6 @@ package-lock.json
 # build/dist
 /dist
 .DS_Store
+
+# env
+.envlogs/
