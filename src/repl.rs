@@ -69,16 +69,21 @@ impl Completer for ShellHelper {
     type Candidate = Pair;
     fn complete(&self, line: &str, pos: usize, ctx: &Context<'_>) -> ReadlineResult<(usize, Vec<Pair>)> {
         let before = &line[..pos];
-        let words: Vec<&str> = before.split_whitespace().collect();
-        if words.len() <= 1 && !before.ends_with(' ') {
-            let prefix = words.first().copied().unwrap_or("");
+        // Find the start of the word being completed (after the last whitespace)
+        let start = before.rfind(char::is_whitespace).map(|i| i + 1).unwrap_or(0);
+        let prefix = &before[start..];
+
+        // Try command completion only if we are at the start of the line or it's a command position
+        if start == 0 || before.trim_start().split_whitespace().count() <= 1 {
             let mut matches: Vec<Pair> = self.known_commands.iter()
                 .filter(|c| c.starts_with(prefix))
                 .map(|c| Pair { display: c.clone(), replacement: c.clone() })
                 .collect();
             matches.sort_by(|a, b| a.display.cmp(&b.display));
-            if !matches.is_empty() { return Ok((pos - prefix.len(), matches)); }
+            if !matches.is_empty() { return Ok((start, matches)); }
         }
+        
+        // Fallback to file completion
         self.file_completer.complete(line, pos, ctx)
     }
 }
