@@ -229,11 +229,8 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
     
     // Read config from Lua
     let globals = lua.globals();
-    let completion_type = if globals.get::<bool>("show_completions_on_tab_double_press").unwrap_or(true) {
-        CompletionType::List
-    } else {
-        CompletionType::Circular
-    };
+    // Default to Circular completion
+    let completion_type = CompletionType::Circular;
 
     let config = Config::builder()
         .completion_type(completion_type)
