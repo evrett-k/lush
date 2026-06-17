@@ -72,7 +72,7 @@
             nfpm
             docker
           ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            pkgs.darwin.security
+            pkgs.darwin.apple_sdk.frameworks.Security
             pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
           ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
             pkgs.glibc
