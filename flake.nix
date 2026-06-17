@@ -71,7 +71,6 @@
             nodejs
             nfpm
             docker
-            cross
           ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [
             Security
             SystemConfiguration
