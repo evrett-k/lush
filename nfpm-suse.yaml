@@ -6,15 +6,9 @@ maintainer: "Your Name <you@example.com>"
 description: "A Lua-powered shell"
 license: GPL-3.0
 formats:
-  deb:
-    packager: deb
-    file: "dist/lush_{{ .Version }}_{{ .Arch }}.deb"
   rpm:
     packager: rpm
-    file: "dist/lush-{{ .Version }}-1.{{ .Arch }}.el.rpm"
-  apk:
-    packager: apk
-    file: "dist/lush-{{ .Version }}-{{ .Arch }}.apk"
+    file: "dist/lush-{{ .Version }}-1.{{ .Arch }}.suse.rpm"
 contents:
 - src: lush
   dst: /usr/bin/lush
