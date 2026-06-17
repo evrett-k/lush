@@ -37,8 +37,8 @@
             openssl
             libiconv
           ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            pkgs.apple-sdk-frameworks.Security
-            pkgs.apple-sdk-frameworks.SystemConfiguration
+            pkgs.darwin.apple_sdk.frameworks.Security
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
           ];
 
           checkFlags = [ "--skip=repl" ];
@@ -72,8 +72,8 @@
             nfpm
             docker
           ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            pkgs.apple-sdk-frameworks.Security
-            pkgs.apple-sdk-frameworks.SystemConfiguration
+            pkgs.darwin.security
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
           ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
             pkgs.glibc
           ];
