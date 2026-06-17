@@ -17,7 +17,14 @@
         pkgs = import nixpkgs { inherit system overlays; };
         rust = pkgs.rust-bin.stable.latest.default.override {
           extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
-          targets = [ "aarch64-apple-darwin" "x86_64-apple-darwin" "x86_64-pc-windows-msvc" "aarch64-pc-windows-msvc" ];
+          targets = [ 
+            "aarch64-apple-darwin" 
+            "x86_64-apple-darwin" 
+            "x86_64-pc-windows-msvc" 
+            "aarch64-pc-windows-msvc" 
+            "x86_64-unknown-linux-musl" 
+            "aarch64-unknown-linux-musl" 
+          ];
         };
       in
       {
