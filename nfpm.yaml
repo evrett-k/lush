@@ -13,5 +13,5 @@ formats:
   apk:
     file: "dist/lush-{{ .Version }}-{{ .Arch }}.apk"
 contents:
-- src: lush
+- src: bin/lush
   dst: /usr/bin/lush
