@@ -232,6 +232,7 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
 
     let config = Config::builder()
         .completion_type(completion_type)
+        .completion_prompt_limit(100)
         .build();
     let mut rl = Editor::with_config(config).map_err(|e| {
         mlua::Error::RuntimeError(format!("Failed to initialize prompt: {}", e))
