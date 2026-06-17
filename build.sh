@@ -19,7 +19,7 @@ need() { command -v "$1" &>/dev/null || die "'$1' not found. Please install $1";
 run_log() {
     local logfile="$LOG_DIR/$1.log"
     shift
-    "$@" > "$logfile" 2>&1
+    "$@" 2>&1 | tee "$logfile"
 }
 
 package_linux() {
@@ -35,9 +35,10 @@ package_linux() {
         docker cp lush-temp-$arch:/usr/local/bin/lush-lsp "$BIN_DIR/linux/$arch/$LSP"
         docker rm lush-temp-$arch
 
-        # Package
-        export ARCH=$arch
-        run_log "nfpm_$arch" nfpm pkg
+        # Package using nfpm
+        nfpm pkg -t deb -p "$DIST/lush_${VERSION}_linux-$arch.deb"
+        nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.linux-$arch.rpm"
+        nfpm pkg -t apk -p "$DIST/lush-${VERSION}-linux-$arch.apk"
     done
     ok "packaged linux"
 }
