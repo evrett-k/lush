@@ -23,6 +23,8 @@ run_log() {
 }
 
 package_linux() {
+    need nfpm
+    need docker
     for arch in x86_64 aarch64; do
         step "Building/Packaging Linux $arch..."
         
@@ -35,7 +37,8 @@ package_linux() {
         docker cp lush-temp-$arch:/usr/local/bin/lush-lsp "$BIN_DIR/linux/$arch/$LSP"
         docker rm lush-temp-$arch
 
-        # Package using nfpm
+        # Package individually
+        export ARCH=$arch
         nfpm pkg -t deb -p "$DIST/lush_${VERSION}_linux-$arch.deb"
         nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.linux-$arch.rpm"
         nfpm pkg -t apk -p "$DIST/lush-${VERSION}-linux-$arch.apk"
@@ -61,6 +64,7 @@ build_macos() {
 Package: $NAME
 Version: $VERSION
 Section: shells
+Priority: optional
 Architecture: $arch
 Maintainer: Everett K <everett.kamulda@outlook.com>
 Description: A Lua-powered shell
