@@ -25,11 +25,11 @@ package_linux() {
     need docker
     step "building and packaging linux (docker)"
     
-    docker build -f Dockerfile.linux -t lush-build .
-    docker create --name lush-temp lush-build
+    docker build -f Dockerfile.linux -t lush-build-linux .
+    docker create --name lush-temp-linux lush-build-linux
     mkdir -p bin
-    docker cp lush-temp:/usr/local/bin/lush bin/lush
-    docker rm lush-temp
+    docker cp lush-temp-linux:/usr/local/bin/lush bin/lush
+    docker rm lush-temp-linux
 
     nfpm pkg -t deb -p "$DIST/lush_${VERSION}_amd64.deb"
     nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.x86_64.rpm"
@@ -61,15 +61,26 @@ EOF
     ok "macos procursus package created"
 }
 
+build_windows() {
+    step "building windows targets (docker)"
+    docker build -f Dockerfile.windows -t lush-build-win .
+    docker create --name lush-temp-win lush-build-win
+    docker cp lush-temp-win:/app/lush.exe "$DIST/lush-${VERSION}-universal.exe"
+    docker rm lush-temp-win
+    ok "windows portable binary built"
+}
+
 case "${1:-}" in
     linux) package_linux ;;
     macos) build_macos ;;
+    windows) build_windows ;;
     all) 
         package_linux
         build_macos
+        build_windows
         ;;
     *)
-        echo "Usage: $0 {linux|macos|all}"
+        echo "Usage: $0 {linux|macos|windows|all}"
         exit 1
         ;;
 esac
