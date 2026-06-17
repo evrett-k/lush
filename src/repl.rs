@@ -273,12 +273,6 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
             }
         }
 
-        #[cfg(unix)]
-        unsafe {
-            let _ = signal::signal(Signal::SIGINT, signal::SigHandler::SigDfl);
-            let _ = signal::signal(Signal::SIGTSTP, signal::SigHandler::SigDfl);
-        }
-
         let use_starship = {
             let val = lua.globals().get::<mlua::Value>("use_starship").unwrap_or(mlua::Value::Nil);
             match val {
