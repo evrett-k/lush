@@ -214,9 +214,11 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
     if env::var("LC_ALL").is_err() { env::set_var("LC_ALL", "en_US.UTF-8"); }
 
     #[cfg(unix)]
-    let interrupt = {
-        let interrupt = Arc::new(AtomicBool::new(false));
-        let i_clone = Arc::clone(&interrupt);
+    let signals = {
+        let sigint = Arc::new(AtomicBool::new(false));
+        let sigtstp = Arc::new(AtomicBool::new(false));
+        
+        let i_clone = Arc::clone(&sigint);
         tokio::spawn(async move {
             let mut sigint = signal(SignalKind::interrupt()).expect("failed to bind sigint");
             loop {
@@ -224,7 +226,16 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
                 i_clone.store(true, Ordering::SeqCst);
             }
         });
-        Some(interrupt)
+
+        let t_clone = Arc::clone(&sigtstp);
+        tokio::spawn(async move {
+            let mut sigtstp = signal(SignalKind::from_raw(libc::SIGTSTP)).expect("failed to bind sigtstp");
+            loop {
+                sigtstp.recv().await;
+                t_clone.store(true, Ordering::SeqCst);
+            }
+        });
+        Some((sigint, sigtstp))
     };
     
     // Read config from Lua
@@ -248,9 +259,9 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
 
     loop {
         #[cfg(unix)]
-        if let Some(ref interrupt) = interrupt {
-            if interrupt.load(Ordering::SeqCst) {
-                interrupt.store(false, Ordering::SeqCst);
+        if let Some((ref sigint, ref sigtstp)) = signals {
+            if sigint.load(Ordering::SeqCst) {
+                sigint.store(false, Ordering::SeqCst);
                 
                 let mut trapped = false;
                 let globals = lua.globals();
@@ -262,10 +273,23 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
                         trapped = true;
                     }
                 }
-
-                if !trapped {
-                    // No output on interrupt
+                if !trapped { }
+                continue;
+            }
+            if sigtstp.load(Ordering::SeqCst) {
+                sigtstp.store(false, Ordering::SeqCst);
+                
+                let mut trapped = false;
+                let globals = lua.globals();
+                if let Ok(traps) = globals.get::<mlua::Table>("LUSH_TRAPS") {
+                    if let Ok(callback) = traps.get::<mlua::Function>("SIGTSTP") {
+                        if let Err(e) = callback.call::<()>(()) {
+                            eprintln!("lush: error in SIGTSTP trap: {}", e);
+                        }
+                        trapped = true;
+                    }
                 }
+                if !trapped { }
                 continue;
             }
         }
