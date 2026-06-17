@@ -222,7 +222,17 @@ pub async fn start_interactive(lua: &Lua) -> mlua::Result<()> {
         Some(interrupt)
     };
     
-    let config = Config::builder().completion_type(CompletionType::Circular).build();
+    // Read config from Lua
+    let globals = lua.globals();
+    let completion_type = if globals.get::<_, bool>("show_completions_on_tab_double_press").unwrap_or(true) {
+        CompletionType::List
+    } else {
+        CompletionType::Circular
+    };
+
+    let config = Config::builder()
+        .completion_type(completion_type)
+        .build();
     let mut rl = Editor::with_config(config).map_err(|e| {
         mlua::Error::RuntimeError(format!("Failed to initialize prompt: {}", e))
     })?;
