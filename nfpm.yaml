@@ -7,13 +7,10 @@ description: "A Lua-powered shell"
 license: GPL-3.0
 formats:
   deb:
-    packager: deb
     file: "dist/lush_{{ .Version }}_{{ .Arch }}.deb"
   rpm:
-    packager: rpm
     file: "dist/lush-{{ .Version }}-1.{{ .Arch }}.rpm"
   apk:
-    packager: apk
     file: "dist/lush-{{ .Version }}-{{ .Arch }}.apk"
 contents:
   - src: dist/bin/linux/{{ .Arch }}/lush
