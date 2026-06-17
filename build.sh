@@ -38,10 +38,12 @@ package_linux() {
         docker rm lush-temp-$arch
 
         # Package individually
+        # Package using nfpm
         export ARCH=$arch
-        nfpm pkg -t deb -p "$DIST/lush_${VERSION}_linux-$arch.deb"
-        nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.linux-$arch.rpm"
-        nfpm pkg -t apk -p "$DIST/lush-${VERSION}-linux-$arch.apk"
+        nfpm pkg -p "$DIST/lush_${VERSION}_linux-$arch.deb"
+        nfpm pkg -p "$DIST/lush-${VERSION}-1.linux-$arch.rpm"
+        nfpm pkg -p "$DIST/lush-${VERSION}-linux-$arch.apk"
+
     done
     ok "packaged linux"
 }
