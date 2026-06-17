@@ -5,12 +5,10 @@ priority: optional
 maintainer: "Your Name <you@example.com>"
 description: "A Lua-powered shell"
 license: GPL-3.0
-platform: linux
-arch: amd64
-packages:
-  - deb
-  - rpm
-  - apk
+formats:
+  deb:
+  rpm:
+  apk:
 contents:
-  - src: bin/lush
-    dst: /usr/bin/lush
+- src: bin/lush
+  dst: /usr/bin/lush

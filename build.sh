@@ -24,16 +24,16 @@ need() { command -v "$1" &>/dev/null || die "'$1' not found. Please install $1";
 
 mkdir -p "$DIST"
 
-# Build Linux with cross and package all formats via nfpm
+# Build Linux with standard cargo (assuming nix toolchain provides targets)
 package_linux() {
     need nfpm
-    need docker
-    need cross
     step "building and packaging linux (deb, rpm, apk)"
     for t in "$T_LINUX_X64" "$T_LINUX_ARM64"; do
-        cross build --release --target "$t"
-        # Manually move binary to expected location for nfpm
+        step "Compiling for $t..."
+        cargo build --release --target "$t"
         mkdir -p bin && cp "target/$t/release/$NAME" "bin/lush"
+        
+        # Package using nfpm
         nfpm pkg -t deb -p "$DIST/lush_${VERSION}_${t}.deb"
         nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.${t}.rpm"
         nfpm pkg -t apk -p "$DIST/lush-${VERSION}-${t}.apk"
@@ -46,12 +46,10 @@ build_macos() {
     step "building macos procursus targets (native)"
     cargo build --release
     
-    # Procursus Layout
     local pkg_dir="procursus_pkg"
     mkdir -p "$pkg_dir/opt/procursus/bin" "$pkg_dir/DEBIAN"
     cp "target/release/$NAME" "$pkg_dir/opt/procursus/bin/$NAME"
     
-    # Create basic control file
     cat > "$pkg_dir/DEBIAN/control" <<EOF
 Package: $NAME
 Version: $VERSION
