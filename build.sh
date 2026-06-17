@@ -23,20 +23,18 @@ mkdir -p "$DIST"
 package_linux() {
     need nfpm
     need docker
-    need cross
-    step "building and packaging linux (cross + docker)"
-    for t in "x86_64-unknown-linux-musl" "aarch64-unknown-linux-musl"; do
-        step "Building $t via cross..."
-        cross build --release --target "$t" || die "Build failed for $t"
-        
-        mkdir -p bin && cp "target/$t/release/$NAME" "bin/lush"
-        
-        step "Packaging $t..."
-        export ARCH=$(echo "$t" | cut -d'-' -f1)
-        nfpm pkg -t deb -p "$DIST/lush_${VERSION}_${ARCH}.deb"
-        nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.${ARCH}.rpm"
-        nfpm pkg -t apk -p "$DIST/lush-${VERSION}-${ARCH}.apk"
-    done
+    step "building and packaging linux (docker)"
+    
+    docker build -f Dockerfile.linux -t lush-build .
+    docker create --name lush-temp lush-build
+    mkdir -p bin
+    docker cp lush-temp:/usr/local/bin/lush bin/lush
+    docker rm lush-temp
+
+    nfpm pkg -t deb -p "$DIST/lush_${VERSION}_amd64.deb"
+    nfpm pkg -t rpm -p "$DIST/lush-${VERSION}-1.x86_64.rpm"
+    nfpm pkg -t apk -p "$DIST/lush-${VERSION}-x86_64.apk"
+    
     ok "packaged linux formats"
 }
 
