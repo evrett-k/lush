@@ -74,8 +74,6 @@
             jq
             act
             nodejs
-            nfpm
-            docker
           ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
             pkgs.glibc
           ];
