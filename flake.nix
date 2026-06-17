@@ -36,10 +36,10 @@
             lua5_4
             openssl
             libiconv
-          ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.apple-sdk.frameworks; [
-            Security
-            SystemConfiguration
-          ]);
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
+            pkgs.darwin.apple_sdk.frameworks.Security
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+          ];
 
           checkFlags = [ "--skip=repl" ];
 
@@ -71,10 +71,10 @@
             nodejs
             nfpm
             docker
-          ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin (with pkgs.apple-sdk.frameworks; [
-            Security
-            SystemConfiguration
-          ]) ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
+            pkgs.darwin.apple_sdk.frameworks.Security
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+          ] ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
             pkgs.glibc
           ];
 
